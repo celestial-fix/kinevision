@@ -6,7 +6,7 @@ from datetime import datetime
 
 import os
 
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./kinevision.db")
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./kinevision_v2.db")
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL

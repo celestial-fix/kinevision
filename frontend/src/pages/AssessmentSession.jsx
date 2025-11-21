@@ -1,7 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Camera, Upload, ChevronRight, CheckCircle, AlertCircle, Video, StopCircle } from 'lucide-react';
+import { Camera, Upload, AlertCircle, StopCircle, Eye, EyeOff } from 'lucide-react';
 import AssessmentLayout from '../components/AssessmentLayout';
+import { Pose } from '@mediapipe/pose';
+import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
+import { POSE_CONNECTIONS } from '@mediapipe/pose';
 
 const EXERCISES = [
     {
@@ -25,25 +28,168 @@ const AssessmentSession = () => {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
-    const [recordedChunks, setRecordedChunks] = useState([]);
     const [mediaStream, setMediaStream] = useState(null);
+    const [showWireframe, setShowWireframe] = useState(false);
+    const [cameraReady, setCameraReady] = useState(false);
+    const [poseDetected, setPoseDetected] = useState(false);
 
     const fileInputRef = useRef(null);
     const videoRef = useRef(null);
+    const canvasRef = useRef(null);
     const mediaRecorderRef = useRef(null);
+    const poseRef = useRef(null);
+    const animationFrameRef = useRef(null);
 
     const currentExercise = EXERCISES[currentStep];
     const isLastExercise = currentStep === EXERCISES.length - 1;
 
-    const startRecording = async () => {
+    // Initialize camera and pose detection on mount
+    useEffect(() => {
+        console.log('Component mounted, initializing camera and pose');
+        initializeCamera();
+        initializePose();
+        return () => {
+            console.log('Component unmounting, cleaning up');
+            stopCamera();
+            cleanupPose();
+        };
+    }, []);
+
+    // Start pose detection loop when camera is ready
+    useEffect(() => {
+        if (cameraReady && videoRef.current) {
+            console.log('Camera ready, starting pose detection loop');
+            detectPose();
+        }
+        return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, [cameraReady]);
+
+    const initializePose = () => {
+        console.log('Initializing MediaPipe Pose...');
+        const pose = new Pose({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+            }
+        });
+
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            enableSegmentation: false,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        pose.onResults(onPoseResults);
+        poseRef.current = pose;
+        console.log('MediaPipe Pose initialized');
+    };
+
+    const cleanupPose = () => {
+        if (poseRef.current) {
+            poseRef.current.close();
+            poseRef.current = null;
+        }
+    };
+
+    const onPoseResults = (results) => {
+        if (!canvasRef.current || !videoRef.current) return;
+
+        const canvas = canvasRef.current;
+        const video = videoRef.current;
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (results.poseLandmarks) {
+            console.log('Pose detected! Drawing', results.poseLandmarks.length, 'landmarks');
+            setPoseDetected(true);
+
+            // Draw connections
+            drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
+                color: '#00FF00',
+                lineWidth: 4
+            });
+
+            // Draw landmarks
+            drawLandmarks(ctx, results.poseLandmarks, {
+                color: '#FF0000',
+                lineWidth: 2,
+                radius: 6
+            });
+        } else {
+            setPoseDetected(false);
+        }
+
+        ctx.restore();
+    };
+
+    const detectPose = async () => {
+        if (!poseRef.current || !videoRef.current || !cameraReady) return;
+
+        const video = videoRef.current;
+
+        if (video.readyState === 4) {
+            try {
+                await poseRef.current.send({ image: video });
+            } catch (err) {
+                console.error('Pose detection error:', err);
+            }
+        }
+
+        animationFrameRef.current = requestAnimationFrame(detectPose);
+    };
+
+    const initializeCamera = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                },
+                audio: false
+            });
             setMediaStream(stream);
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
             }
+            setCameraReady(true);
+            setError(null);
+            console.log('Camera initialized successfully');
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            setError("No se pudo acceder a la cámara. Por favor verifica los permisos o intenta subir un video.");
+            setCameraReady(false);
+        }
+    };
 
-            const mediaRecorder = new MediaRecorder(stream);
+    const stopCamera = () => {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            setMediaStream(null);
+        }
+        setCameraReady(false);
+    };
+
+    const startRecording = () => {
+        if (!mediaStream) {
+            setError("Cámara no disponible. Intenta recargar la página.");
+            return;
+        }
+
+        try {
+            const mediaRecorder = new MediaRecorder(mediaStream, {
+                mimeType: 'video/webm;codecs=vp8'
+            });
             mediaRecorderRef.current = mediaRecorder;
 
             const chunks = [];
@@ -54,18 +200,14 @@ const AssessmentSession = () => {
             mediaRecorder.onstop = () => {
                 const blob = new Blob(chunks, { type: 'video/webm' });
                 handleUpload(blob, 'recording.webm');
-
-                // Stop all tracks
-                stream.getTracks().forEach(track => track.stop());
-                setMediaStream(null);
             };
 
             mediaRecorder.start();
             setIsRecording(true);
             setError(null);
         } catch (err) {
-            console.error("Error accessing camera:", err);
-            setError("No se pudo acceder a la cámara. Por favor verifica los permisos o intenta subir un video.");
+            console.error("Error starting recording:", err);
+            setError("No se pudo iniciar la grabación. Intenta nuevamente.");
         }
     };
 
@@ -151,30 +293,68 @@ const AssessmentSession = () => {
                             </div>
                         </div>
 
-                        {/* Video Area */}
-                        <div className="aspect-video bg-black/40 rounded-2xl flex items-center justify-center mb-8 border border-white/5 overflow-hidden relative">
-                            {isRecording || mediaStream ? (
-                                <video
-                                    ref={videoRef}
-                                    autoPlay
-                                    muted
-                                    playsInline
-                                    className="w-full h-full object-cover transform scale-x-[-1]"
-                                />
-                            ) : (
-                                <div className="text-center p-6">
-                                    <Camera className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                                    <p className="text-slate-400">
-                                        Grábate realizando el ejercicio.<br />
-                                        Asegúrate de que tu cuerpo completo esté en el cuadro.
-                                    </p>
-                                </div>
-                            )}
+                        {/* Video Preview Area */}
+                        <div className="aspect-video bg-black rounded-2xl mb-4 border border-white/10 overflow-hidden relative">
+                            {cameraReady ? (
+                                <>
+                                    <video
+                                        ref={videoRef}
+                                        autoPlay
+                                        muted
+                                        playsInline
+                                        className="w-full h-full object-cover transform scale-x-[-1]"
+                                    />
+                                    <canvas
+                                        ref={canvasRef}
+                                        className="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1]"
+                                        style={{ opacity: showWireframe ? 1 : 0 }}
+                                    />
 
-                            {isRecording && (
-                                <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500/80 text-white px-3 py-1 rounded-full text-sm animate-pulse">
-                                    <div className="w-2 h-2 bg-white rounded-full" />
-                                    Grabando...
+                                    {/* Recording Indicator */}
+                                    {isRecording && (
+                                        <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                                            <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                                            GRABANDO
+                                        </div>
+                                    )}
+
+                                    {/* Pose Detection Status */}
+                                    {showWireframe && (
+                                        <div className={`absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${poseDetected
+                                            ? 'bg-green-500/80 text-white'
+                                            : 'bg-yellow-500/80 text-white'
+                                            }`}>
+                                            <div className={`w-2 h-2 rounded-full ${poseDetected ? 'bg-white' : 'bg-white animate-pulse'}`} />
+                                            {poseDetected ? 'Pose detectada' : 'Buscando pose...'}
+                                        </div>
+                                    )}
+
+                                    {/* Wireframe Toggle */}
+                                    <button
+                                        onClick={() => setShowWireframe(!showWireframe)}
+                                        className={`absolute top-4 right-4 p-3 rounded-full transition-all backdrop-blur-sm ${showWireframe
+                                            ? 'bg-green-500 hover:bg-green-600 text-white'
+                                            : 'bg-black/60 hover:bg-black/80 text-white'
+                                            }`}
+                                        title={showWireframe ? "Ocultar esqueleto" : "Mostrar esqueleto"}
+                                    >
+                                        {showWireframe ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <div className="text-center p-6">
+                                        <Camera className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                                        <p className="text-slate-400 mb-4">
+                                            Iniciando cámara...
+                                        </p>
+                                        <button
+                                            onClick={initializeCamera}
+                                            className="text-blue-400 hover:text-blue-300 underline"
+                                        >
+                                            Reintentar
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -191,11 +371,11 @@ const AssessmentSession = () => {
                             {!isRecording ? (
                                 <button
                                     onClick={startRecording}
-                                    disabled={uploading}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={uploading || !cameraReady}
+                                    className="bg-red-600 hover:bg-red-500 text-white py-4 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
                                 >
-                                    <Video className="w-5 h-5" />
-                                    Grabar Video
+                                    <div className="w-4 h-4 bg-white rounded-full" />
+                                    Iniciar Grabación
                                 </button>
                             ) : (
                                 <button
