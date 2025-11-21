@@ -51,12 +51,23 @@ class Professional(Base):
     user = relationship("User", back_populates="professional_profile")
     patients = relationship("Patient", back_populates="professional")
 
+class TrainerType(str, enum.Enum):
+    VOLUNTEER = "volunteer"
+    PROFESSIONAL = "professional"
+    STAFF = "staff"
+
 class AITrainer(Base):
     __tablename__ = "ai_trainers"
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     rank_score = Column(Integer, default=0)
+    
+    # Gamification & Roles
+    trainer_type = Column(String, default=TrainerType.VOLUNTEER)
+    points = Column(Integer, default=0)
+    rank = Column(String, default="Novice") # Novice, Expert, Master
+    earnings = Column(Float, default=0.0) # For professionals
     
     user = relationship("User", back_populates="trainer_profile")
     uploaded_videos = relationship("Video", back_populates="uploader")
