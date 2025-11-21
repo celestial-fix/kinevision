@@ -44,15 +44,26 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 def send_email(to_email: str, subject: str, body: str):
+    """Send email via SMTP or print to console in dev mode."""
     smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_user = os.getenv("SMTP_USER")
     smtp_password = os.getenv("SMTP_PASSWORD")
 
+    # Dev mode: print to console
     if not smtp_user or not smtp_password:
-        print(f"\n[MOCK EMAIL] To: {to_email}\nSubject: {subject}\nBody: {body}\n")
+        print("\n" + "="*80)
+        print("📧 MAGIC LINK EMAIL (Dev Mode - SMTP not configured)")
+        print("="*80)
+        print(f"To: {to_email}")
+        print(f"Subject: {subject}")
+        print(f"\n{body}\n")
+        print("="*80)
+        print("ℹ️  To enable real emails, set SMTP_USER and SMTP_PASSWORD in .env")
+        print("="*80 + "\n")
         return
 
+    # Production mode: send real email
     try:
         msg = MIMEMultipart()
         msg['From'] = smtp_user
@@ -65,9 +76,10 @@ def send_email(to_email: str, subject: str, body: str):
         server.login(smtp_user, smtp_password)
         server.send_message(msg)
         server.quit()
-        print(f"Email sent to {to_email}")
+        print(f"✅ Email sent successfully to {to_email}")
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"❌ Failed to send email: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
 # Auth Endpoints
 @router.post("/auth/magic-link/request")

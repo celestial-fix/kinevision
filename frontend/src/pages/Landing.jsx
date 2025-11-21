@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Activity, User, Stethoscope, BrainCircuit, Check, ArrowRight, Mail, Loader2 } from 'lucide-react';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 
 const Landing = () => {
     const [email, setEmail] = useState('');
@@ -52,12 +53,15 @@ const Landing = () => {
                         <a href="#pricing" className="hover:text-white transition-colors">Planes</a>
                         <a href="#trainers" className="hover:text-white transition-colors">Entrenadores IA</a>
                     </div>
-                    <button
-                        onClick={() => document.getElementById('login-section').scrollIntoView({ behavior: 'smooth' })}
-                        className="btn btn-primary text-sm px-6"
-                    >
-                        Ingresar
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <ThemeSwitcher />
+                        <button
+                            onClick={() => document.getElementById('login-section').scrollIntoView({ behavior: 'smooth' })}
+                            className="btn btn-primary text-sm px-6"
+                        >
+                            Ingresar
+                        </button>
+                    </div>
                 </div>
             </nav>
 
