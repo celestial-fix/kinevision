@@ -8,6 +8,7 @@ import TrainerDashboard from './pages/TrainerDashboard';
 import SessionView from './pages/SessionView';
 import ExerciseBriefing from './pages/ExerciseBriefing';
 import AuthCallback from './pages/AuthCallback';
+import MarketplacePage from './pages/MarketplacePage';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -46,6 +47,12 @@ function App() {
             <Route path="/session/:id" element={
               <RequireAuth allowedRoles={['patient']}>
                 <SessionView />
+              </RequireAuth>
+            } />
+
+            <Route path="/patient/marketplace" element={
+              <RequireAuth allowedRoles={['patient']}>
+                <MarketplacePage />
               </RequireAuth>
             } />
 

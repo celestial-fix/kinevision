@@ -1,19 +1,29 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
-from models import engine, Session as DbSession
+from models import engine, SessionLocal
+from pydantic import BaseModel
+import models
 import shutil
 import os
 from analysis import VideoAnalyzer
 
 # Dependency
 def get_db():
-    db = DbSession(bind=engine)
+    db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
 router = APIRouter()
+
+# Pydantic models for request bodies
+class MagicLinkRequest(BaseModel):
+    email: str
+
+class MagicLinkVerify(BaseModel):
+    token: str
+    email: str
 
 @router.get("/health")
 def health_check():
@@ -78,17 +88,34 @@ def send_email(to_email: str, subject: str, body: str):
         server.quit()
         print(f"✅ Email sent successfully to {to_email}")
     except Exception as e:
-        print(f"❌ Failed to send email: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+        # Fall back to dev mode if SMTP fails
+        print(f"⚠️  SMTP Error: {e}")
+        print("\n" + "="*80)
+        print("📧 MAGIC LINK EMAIL (Fallback - SMTP failed)")
+        print("="*80)
+        print(f"To: {to_email}")
+        print(f"Subject: {subject}")
+        print(f"\n{body}\n")
+        print("="*80)
+        print("ℹ️  SMTP failed. Common issues:")
+        print("   - Gmail: Use an App Password, not your regular password")
+        print("   - Enable 'Less secure app access' or use OAuth2")
+        print("   - Check SMTP_SERVER and SMTP_PORT settings")
+        print("="*80 + "\n")
 
 # Auth Endpoints
 @router.post("/auth/magic-link/request")
-def request_magic_link(email: str, db: Session = Depends(get_db)):
+def request_magic_link(request: MagicLinkRequest, db: Session = Depends(get_db)):
     # 1. Check if user exists, if not create one (simplified for demo)
-    user = db.query(models.User).filter(models.User.email == email).first()
+    user = db.query(models.User).filter(models.User.email == request.email).first()
     if not user:
-        # Create a default user if not exists - in real app, might want a registration flow
-        user = models.User(email=email, role="patient", full_name="New User")
+        # Create a default user with all roles for development
+        # In production, you'd assign roles based on registration type
+        user = models.User(
+            email=request.email, 
+            roles="patient,professional,trainer,admin",  # All roles for dev
+            full_name="New User"
+        )
         db.add(user)
         db.commit()
         db.refresh(user)
@@ -98,7 +125,7 @@ def request_magic_link(email: str, db: Session = Depends(get_db)):
     token = f"mock_token_for_{user.email}"
     
     # 3. Send email
-    magic_link = f"http://localhost:5173/auth/verify?token={token}&email={email}"
+    magic_link = f"http://localhost:5173/auth/verify?token={token}&email={request.email}"
     email_body = f"""
     <h1>Login to KineVision</h1>
     <p>Click the link below to sign in:</p>
@@ -106,7 +133,7 @@ def request_magic_link(email: str, db: Session = Depends(get_db)):
     <p>If you didn't request this, ignore this email.</p>
     """
     
-    send_email(email, "Your KineVision Login Link", email_body)
+    send_email(request.email, "Your KineVision Login Link", email_body)
     
     return {"message": "Magic link sent"}
 
@@ -128,7 +155,7 @@ def verify_magic_link(token: str, email: str, db: Session = Depends(get_db)):
         "user": {
             "id": user.id,
             "email": user.email,
-            "role": user.role,
+            "roles": user.get_roles_list(),  # Return array of roles
             "name": user.full_name
         }
     }
@@ -162,3 +189,62 @@ def get_patient_dashboard():
 @router.get("/dashboard/trainer")
 def get_trainer_dashboard():
     return {"message": "Trainer dashboard data"}
+
+# Marketplace Endpoints
+@router.get("/exercises")
+def get_all_exercises(db: Session = Depends(get_db)):
+    """Get all available exercises with their locked status."""
+    exercises = db.query(models.Exercise).all()
+    return {"exercises": [
+        {
+            "id": ex.id,
+            "exercise_id": ex.exercise_id,
+            "title": ex.title,
+            "category": ex.category,
+            "difficulty": ex.difficulty,
+            "price": ex.price,
+            "locked": ex.locked_by_default
+        } for ex in exercises
+    ]}
+
+@router.get("/user/exercises")
+def get_user_exercises(user_email: str, db: Session = Depends(get_db)):
+    """Get exercises unlocked by a specific user."""
+    user = db.query(models.User).filter(models.User.email == user_email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    unlocked = db.query(models.UserExercise).filter(models.UserExercise.user_id == user.id).all()
+    exercise_ids = [ue.exercise_id for ue in unlocked]
+    
+    return {"unlocked_exercise_ids": exercise_ids}
+
+@router.post("/exercises/{exercise_id}/unlock")
+def unlock_exercise(exercise_id: str, user_email: str, db: Session = Depends(get_db)):
+    """Unlock an exercise for a user."""
+    # Get user
+    user = db.query(models.User).filter(models.User.email == user_email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get exercise
+    exercise = db.query(models.Exercise).filter(models.Exercise.exercise_id == exercise_id).first()
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Exercise not found")
+    
+    # Check if already unlocked
+    existing = db.query(models.UserExercise).filter(
+        models.UserExercise.user_id == user.id,
+        models.UserExercise.exercise_id == exercise.id
+    ).first()
+    
+    if existing:
+        return {"message": "Exercise already unlocked"}
+    
+    # Create unlock record
+    user_exercise = models.UserExercise(user_id=user.id, exercise_id=exercise.id)
+    db.add(user_exercise)
+    db.commit()
+    
+    return {"message": f"Exercise {exercise_id} unlocked successfully"}
+

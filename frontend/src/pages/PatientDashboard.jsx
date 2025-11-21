@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, Calendar, Trophy, Video, Flame, TrendingUp, BrainCircuit, Stethoscope, Home, User } from 'lucide-react';
+import { Activity, Calendar, Trophy, Video, Flame, TrendingUp, BrainCircuit, Stethoscope, Home, User, ShoppingBag } from 'lucide-react';
 import { EXERCISES } from '../data/exercises';
 import Layout from '../components/Layout';
 
@@ -8,9 +8,13 @@ const PatientDashboard = () => {
     const sidebarItems = [
         { label: 'Inicio', path: '/patient', icon: <Home size={20} /> },
         { label: 'Mis Ejercicios', path: '/patient/exercises', icon: <Activity size={20} /> },
+        { label: 'Marketplace', path: '/patient/marketplace', icon: <ShoppingBag size={20} /> },
         { label: 'Progreso', path: '/patient/progress', icon: <TrendingUp size={20} /> },
         { label: 'Perfil', path: '/patient/profile', icon: <User size={20} /> },
     ];
+
+    // Filter to show only unlocked exercises
+    const unlockedExercises = EXERCISES.filter(ex => !ex.locked);
 
     return (
         <Layout role="patient" title="Panel de Paciente" sidebarItems={sidebarItems}>
@@ -62,7 +66,7 @@ const PatientDashboard = () => {
             {/* Main Actions Grid */}
             <h2 className="text-xl font-bold text-white mb-4">Tu Plan de Hoy</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {EXERCISES.map((exercise) => (
+                {unlockedExercises.map((exercise) => (
                     <div key={exercise.id} className="card group hover:border-sky-500/50 transition-all duration-300">
                         <div className="aspect-video bg-slate-900 rounded-lg mb-4 relative overflow-hidden">
                             <img

@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, Enum
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from sqlalchemy import create_engine
 import enum
 from datetime import datetime
@@ -11,12 +11,17 @@ SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./kinevision.db")
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
 )
+
+# Create sessionmaker for SQLAlchemy 2.0
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 Base = declarative_base()
 
 class UserRole(str, enum.Enum):
     PATIENT = "patient"
     PROFESSIONAL = "professional"
     TRAINER = "trainer"
+    ADMIN = "admin"
 
 class User(Base):
     __tablename__ = "users"
@@ -24,13 +29,26 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    role = Column(String) # stored as string, validated as enum in logic
+    roles = Column(String, default="patient") # comma-separated roles: "patient,professional,trainer"
     full_name = Column(String)
+    
+    def has_role(self, role: str) -> bool:
+        """Check if user has a specific role"""
+        if not self.roles:
+            return False
+        return role in self.roles.split(',')
+    
+    def get_roles_list(self) -> list:
+        """Get list of user roles"""
+        if not self.roles:
+            return []
+        return [r.strip() for r in self.roles.split(',')]
     
     # Relationships
     patient_profile = relationship("Patient", back_populates="user", uselist=False)
     professional_profile = relationship("Professional", back_populates="user", uselist=False)
     trainer_profile = relationship("AITrainer", back_populates="user", uselist=False)
+    unlocked_exercises = relationship("UserExercise", back_populates="user")
 
 class Patient(Base):
     __tablename__ = "patients"
@@ -131,3 +149,27 @@ class GamificationStats(Base):
     points = Column(Integer, default=0)
     
     patient = relationship("Patient", back_populates="gamification_stats")
+
+class Exercise(Base):
+    __tablename__ = "exercises"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    exercise_id = Column(String, unique=True, index=True)  # e.g., 'squat', 'plank'
+    title = Column(String)
+    category = Column(String)  # e.g., 'Legs', 'Core', 'Shoulders'
+    difficulty = Column(String)  # 'Beginner', 'Intermediate', 'Advanced'
+    price = Column(Float, default=0.0)
+    locked_by_default = Column(Boolean, default=True)
+    
+    user_exercises = relationship("UserExercise", back_populates="exercise")
+
+class UserExercise(Base):
+    __tablename__ = "user_exercises"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    exercise_id = Column(Integer, ForeignKey("exercises.id"))
+    unlocked_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="unlocked_exercises")
+    exercise = relationship("Exercise", back_populates="user_exercises")
