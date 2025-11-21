@@ -12,11 +12,16 @@ const Landing = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate API call to backend
+        // API call to backend
         try {
-            const response = await fetch('http://localhost:8000/api/auth/magic-link/request?email=' + email, {
-                method: 'POST'
+            const response = await fetch('http://localhost:8000/api/auth/magic-link/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email })
             });
+
             if (response.ok) {
                 setSent(true);
                 // For demo purposes, we'll simulate the user clicking the link after 3 seconds
@@ -29,29 +34,34 @@ const Landing = () => {
                     else if (email.includes('pro')) navigate('/professional');
                     else navigate('/patient');
                 }, 3000);
+            } else {
+                const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                console.error("Login failed:", response.status, errorData);
+                alert(`Error: ${errorData.detail || 'Failed to send magic link'}`);
             }
         } catch (error) {
             console.error("Login failed", error);
+            alert('Network error: Could not connect to server');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-sky-500/30">
+        <div className="min-h-screen font-sans bg-[var(--bg-primary)] text-[var(--text-primary)]">
             {/* Navbar */}
-            <nav className="fixed w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-white/5">
+            <nav className="fixed w-full z-50 backdrop-blur-md bg-[var(--bg-primary)]/95 border-b border-[var(--border-color)]">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Activity className="text-sky-500" size={28} />
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
+                        <Activity style={{ color: 'var(--primary)' }} size={28} />
+                        <span className="text-xl font-bold text-gradient">
                             KineVision
                         </span>
                     </div>
-                    <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-                        <a href="#features" className="hover:text-white transition-colors">Características</a>
-                        <a href="#pricing" className="hover:text-white transition-colors">Planes</a>
-                        <a href="#trainers" className="hover:text-white transition-colors">Entrenadores IA</a>
+                    <div className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-secondary)]">
+                        <a href="#features" className="transition-colors hover:text-[var(--text-primary)]">Características</a>
+                        <a href="#pricing" className="transition-colors hover:text-[var(--text-primary)]">Planes</a>
+                        <a href="#trainers" className="transition-colors hover:text-[var(--text-primary)]">Entrenadores IA</a>
                     </div>
                     <div className="flex items-center gap-4">
                         <ThemeSwitcher />
@@ -67,65 +77,71 @@ const Landing = () => {
 
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-sky-500/20 rounded-full blur-[120px] -z-10" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] rounded-full blur-[120px] -z-10" style={{ backgroundColor: 'var(--primary)', opacity: 0.2 }} />
 
                 <div className="max-w-4xl mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 border border-slate-800 mb-8 animate-fade-in">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-sm text-slate-300">IA de Nueva Generación Activa</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 animate-fade-in bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                        <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--success)' }} />
+                        <span className="text-sm text-[var(--text-secondary)]">IA de Nueva Generación Activa</span>
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight tracking-tight">
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight tracking-tight text-[var(--text-primary)]">
                         Recupera tu movilidad con <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-purple-400">
+                        <span className="text-gradient">
                             Inteligencia Artificial
                         </span>
                     </h1>
 
-                    <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-xl mb-10 max-w-2xl mx-auto leading-relaxed text-[var(--text-secondary)]">
                         KineVision utiliza visión por computadora avanzada para guiar tus ejercicios en tiempo real,
                         asegurando una recuperación segura y efectiva desde casa.
                     </p>
 
                     {/* Login / CTA Box */}
-                    <div id="login-section" className="max-w-md mx-auto bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+                    <div id="login-section" className="max-w-md mx-auto backdrop-blur-xl rounded-2xl p-8 shadow-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
                         {!sent ? (
                             <form onSubmit={handleLogin} className="space-y-4">
                                 <div className="text-left mb-2">
-                                    <label className="text-sm font-medium text-slate-300 ml-1">Comienza ahora</label>
+                                    <label className="text-sm font-medium text-[var(--text-secondary)] ml-1">Comienza ahora</label>
                                 </div>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }} size={20} />
                                     <input
                                         type="email"
                                         placeholder="tu@email.com"
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500 transition-colors"
+                                        className="w-full rounded-xl py-3 pl-10 pr-4 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        style={{
+                                            backgroundColor: 'var(--bg-primary)',
+                                            border: `var(--border-width) solid var(--border-color)`,
+                                            color: 'var(--text-primary)'
+                                        }}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
+                                        disabled={loading || sent}
                                         required
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    disabled={loading}
-                                    className="w-full btn btn-primary py-3 text-base flex items-center justify-center gap-2"
+                                    disabled={loading || sent}
+                                    className="w-full btn btn-primary py-3 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? <Loader2 className="animate-spin" /> : <>Continuar con Magic Link <ArrowRight size={18} /></>}
                                 </button>
-                                <p className="text-xs text-slate-500 mt-4">
+                                <p className="text-xs mt-4" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
                                     Te enviaremos un enlace seguro para ingresar sin contraseña.
                                 </p>
                             </form>
                         ) : (
                             <div className="text-center py-8">
-                                <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Mail className="text-green-400" size={32} />
+                                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'var(--success)', opacity: 0.1 }}>
+                                    <Mail style={{ color: 'var(--success)' }} size={32} />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">¡Enlace enviado!</h3>
-                                <p className="text-slate-400 text-sm">
+                                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">¡Enlace enviado!</h3>
+                                <p className="text-[var(--text-secondary)] text-sm">
                                     Revisa tu correo ({email}) y haz clic en el enlace para ingresar.
                                 </p>
-                                <p className="text-xs text-slate-600 mt-4 animate-pulse">
+                                <p className="text-xs mt-4 animate-pulse" style={{ color: 'var(--text-secondary)', opacity: 0.5 }}>
                                     (Simulando redirección en 3s...)
                                 </p>
                             </div>
@@ -135,11 +151,11 @@ const Landing = () => {
             </section>
 
             {/* Features Grid */}
-            <section id="features" className="py-24 bg-slate-950 relative">
+            <section id="features" className="py-24 relative" style={{ backgroundColor: 'var(--bg-secondary)' }}>
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Tecnología que te cuida</h2>
-                        <p className="text-slate-400 max-w-2xl mx-auto">Nuestra IA analiza 33 puntos clave de tu cuerpo en tiempo real para prevenir lesiones y maximizar resultados.</p>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Tecnología que te cuida</h2>
+                        <p className="max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>Nuestra IA analiza 33 puntos clave de tu cuerpo en tiempo real para prevenir lesiones y maximizar resultados.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -163,9 +179,9 @@ const Landing = () => {
             </section>
 
             {/* Pricing / Plans */}
-            <section id="pricing" className="py-24 bg-slate-900/30 border-y border-white/5">
+            <section id="pricing" className="py-24" style={{ backgroundColor: 'var(--bg-primary)', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
                 <div className="max-w-7xl mx-auto px-6">
-                    <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">Planes Flexibles</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold text-center mb-16" style={{ color: 'var(--text-primary)' }}>Planes Flexibles</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                         {/* Patient Plan */}
@@ -203,8 +219,8 @@ const Landing = () => {
             </section>
 
             {/* AI Trainers Section */}
-            <section id="trainers" className="py-24 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-slate-950 -z-10" />
+            <section id="trainers" className="py-24 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)' }}>
+                <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(to bottom, rgba(147, 51, 234, 0.1), var(--bg-secondary))' }} />
                 <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-12">
                     <div className="flex-1">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
@@ -273,31 +289,35 @@ const Landing = () => {
 };
 
 const FeatureCard = ({ icon, title, description }) => (
-    <div className="p-6 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-sky-500/30 transition-colors group">
-        <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 mb-4 group-hover:scale-110 transition-transform">
+    <div className="p-6 rounded-2xl border hover:border-sky-500/30 transition-colors group" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform" style={{ backgroundColor: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)' }}>
             {React.cloneElement(icon, { size: 24 })}
         </div>
-        <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
-        <p className="text-slate-400 leading-relaxed">{description}</p>
+        <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+        <p className="leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{description}</p>
     </div>
 );
 
 const PricingCard = ({ title, price, period, features, cta, highlight }) => (
-    <div className={`p-8 rounded-3xl border ${highlight ? 'bg-slate-900/80 border-sky-500/50 shadow-[0_0_40px_-10px_rgba(14,165,233,0.15)]' : 'bg-slate-950 border-slate-800'} flex flex-col`}>
-        <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+    <div className="p-8 rounded-3xl border flex flex-col" style={{
+        backgroundColor: highlight ? 'var(--bg-card)' : 'var(--bg-secondary)',
+        borderColor: highlight ? 'var(--primary)' : 'var(--border-color)',
+        boxShadow: highlight ? '0 0 40px -10px rgba(14, 165, 233, 0.15)' : 'none'
+    }}>
+        <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{title}</h3>
         <div className="flex items-baseline gap-1 mb-6">
-            <span className="text-4xl font-bold text-white">{price}</span>
-            <span className="text-slate-500">{period}</span>
+            <span className="text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>{price}</span>
+            <span style={{ color: 'var(--text-secondary)' }}>{period}</span>
         </div>
         <ul className="space-y-4 mb-8 flex-1">
             {features.map((feature, i) => (
-                <li key={i} className="flex items-center gap-3 text-slate-300 text-sm">
-                    <Check size={16} className={highlight ? "text-sky-400" : "text-slate-500"} />
+                <li key={i} className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <Check size={16} style={{ color: highlight ? 'var(--primary)' : 'var(--text-secondary)' }} />
                     {feature}
                 </li>
             ))}
         </ul>
-        <button className={`w-full py-3 rounded-xl font-semibold transition-all ${highlight ? 'btn-primary' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
+        <button className={`w-full py-3 rounded-xl font-semibold transition-all ${highlight ? 'btn-primary' : ''}`} style={!highlight ? { backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' } : {}}>
             {cta}
         </button>
     </div>
