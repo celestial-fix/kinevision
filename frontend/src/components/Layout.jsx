@@ -45,8 +45,8 @@ const Layout = ({ children, role, title, sidebarItems }) => {
                                     key={item.path}
                                     to={item.path}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                            ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
-                                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                        ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                         }`}
                                     onClick={() => setIsSidebarOpen(false)}
                                 >
@@ -102,7 +102,7 @@ const Layout = ({ children, role, title, sidebarItems }) => {
 
                 {/* Page Content */}
                 <main className="flex-1 p-6 overflow-y-auto">
-                    <div className="max-w-7xl mx-auto animate-fade-in">
+                    <div className="w-full animate-fade-in">
                         {children}
                     </div>
                 </main>

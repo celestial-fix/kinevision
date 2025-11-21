@@ -4,10 +4,12 @@ from sqlalchemy import create_engine
 import enum
 from datetime import datetime
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./kinevision.db"
+import os
+
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./kinevision.db")
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL
 )
 Base = declarative_base()
 

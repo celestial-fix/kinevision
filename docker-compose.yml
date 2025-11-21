@@ -1,0 +1,36 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://kinevision:securepassword@postgres:5432/kinevision_db
+    env_file:
+      - ./backend/.env
+    volumes:
+      - video_storage:/app/videos
+    depends_on:
+      - postgres
+    restart: always
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=kinevision
+      - POSTGRES_PASSWORD=securepassword
+      - POSTGRES_DB=kinevision_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:
+  video_storage:
