@@ -5,6 +5,9 @@ from pydantic import BaseModel
 import models
 import shutil
 import os
+import uuid
+import json
+from datetime import datetime
 from analysis import VideoAnalyzer
 
 # Dependency
@@ -24,6 +27,27 @@ class MagicLinkRequest(BaseModel):
 class MagicLinkVerify(BaseModel):
     token: str
     email: str
+
+class UserProfileUpdate(BaseModel):
+    full_name: str = None
+    mobility_traits: list[str] = None
+    recovery_goals: list[str] = None
+    surgery_info: dict = None
+
+class ProgramCreate(BaseModel):
+    title: str
+    description: str
+    exercises: list[str] # List of exercise IDs
+    created_by_email: str
+
+class ProgramAssign(BaseModel):
+    program_id: int
+    patient_email: str
+
+class MessageCreate(BaseModel):
+    sender_email: str
+    receiver_email: str
+    content: str
 
 @router.get("/health")
 def health_check():
@@ -248,3 +272,217 @@ def unlock_exercise(exercise_id: str, user_email: str, db: Session = Depends(get
     
     return {"message": f"Exercise {exercise_id} unlocked successfully"}
 
+    
+    return {"message": f"Exercise {exercise_id} unlocked successfully"}
+
+# Assessment Endpoints
+@router.post("/assessment/start")
+def start_assessment(db: Session = Depends(get_db)):
+    """Start a new anonymous assessment session."""
+    session_id = str(uuid.uuid4())
+    assessment = models.AnonymousAssessment(
+        session_id=session_id,
+        exercises_data=json.dumps([]) # Initialize empty list
+    )
+    db.add(assessment)
+    db.commit()
+    return {"session_id": session_id}
+
+@router.post("/assessment/{session_id}/submit")
+async def submit_assessment_exercise(
+    session_id: str, 
+    exercise_id: str,
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db)
+):
+    """Submit a video for an exercise in an anonymous session."""
+    assessment = db.query(models.AnonymousAssessment).filter(models.AnonymousAssessment.session_id == session_id).first()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Save file temporarily
+    upload_dir = "uploads/assessment"
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
+    
+    file_path = os.path.join(upload_dir, f"{session_id}_{exercise_id}_{file.filename}")
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # Analyze
+    analyzer = VideoAnalyzer()
+    results = analyzer.analyze_video(file_path)
+    
+    # Update assessment data
+    current_data = json.loads(assessment.exercises_data)
+    
+    # Check if exercise already exists and update or append
+    exercise_entry = {
+        "exercise_id": exercise_id,
+        "results": results,
+        "timestamp": str(datetime.utcnow())
+    }
+    
+    # Remove previous attempt if exists
+    current_data = [d for d in current_data if d["exercise_id"] != exercise_id]
+    current_data.append(exercise_entry)
+    
+    assessment.exercises_data = json.dumps(current_data)
+    db.commit()
+    
+    # Cleanup
+    try:
+        os.remove(file_path)
+    except:
+        pass
+        
+    return {"status": "success", "analysis": results}
+
+@router.get("/assessment/{session_id}/results")
+def get_assessment_results(session_id: str, db: Session = Depends(get_db)):
+    """Get final results and recommendations."""
+    assessment = db.query(models.AnonymousAssessment).filter(models.AnonymousAssessment.session_id == session_id).first()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Session not found")
+        
+    data = json.loads(assessment.exercises_data)
+    
+    # Simple logic for recommendation (can be enhanced)
+    completed_count = len(data)
+    recommendation = "General Mobility Program"
+    
+    # Mark as completed if not already
+    if not assessment.completed_at:
+        assessment.completed_at = datetime.utcnow()
+        assessment.final_feedback = recommendation
+        db.commit()
+        
+    return {
+        "session_id": session_id,
+        "completed_exercises": completed_count,
+        "exercises": data,
+        "recommendation": recommendation,
+        "cta": {
+            "text": "Sign up to save your progress",
+            "link": "/auth/register"
+        }
+    }
+
+# User Profile Endpoints
+@router.put("/user/profile")
+def update_user_profile(update: UserProfileUpdate, email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if update.full_name:
+        user.full_name = update.full_name
+    
+    # Update patient profile if exists
+    if user.patient_profile:
+        if update.mobility_traits:
+            user.patient_profile.mobility_traits = json.dumps(update.mobility_traits)
+        if update.recovery_goals:
+            user.patient_profile.recovery_goals = json.dumps(update.recovery_goals)
+        if update.surgery_info:
+            user.patient_profile.surgery_info = json.dumps(update.surgery_info)
+            
+    db.commit()
+    return {"message": "Profile updated successfully"}
+
+# Program Management Endpoints
+@router.post("/programs")
+def create_program(program: ProgramCreate, db: Session = Depends(get_db)):
+    professional = db.query(models.User).filter(models.User.email == program.created_by_email).first()
+    if not professional or not professional.professional_profile:
+        raise HTTPException(status_code=403, detail="Only professionals can create programs")
+        
+    new_program = models.Program(
+        title=program.title,
+        description=program.description,
+        created_by_id=professional.professional_profile.id,
+        exercises_json=json.dumps(program.exercises)
+    )
+    db.add(new_program)
+    db.commit()
+    return {"message": "Program created", "id": new_program.id}
+
+@router.get("/programs")
+def list_programs(db: Session = Depends(get_db)):
+    programs = db.query(models.Program).all()
+    return programs
+
+@router.post("/programs/assign")
+def assign_program(assignment: ProgramAssign, db: Session = Depends(get_db)):
+    program = db.query(models.Program).filter(models.Program.id == assignment.program_id).first()
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+        
+    patient_user = db.query(models.User).filter(models.User.email == assignment.patient_email).first()
+    if not patient_user or not patient_user.patient_profile:
+        raise HTTPException(status_code=404, detail="Patient not found")
+        
+    new_assignment = models.ProgramAssignment(
+        program_id=program.id,
+        patient_id=patient_user.patient_profile.id,
+        status="active"
+    )
+    db.add(new_assignment)
+    db.commit()
+    return {"message": "Program assigned successfully"}
+
+@router.get("/patient/program")
+def get_patient_program(email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user or not user.patient_profile:
+        raise HTTPException(status_code=404, detail="Patient not found")
+        
+    # Get active assignment
+    assignment = db.query(models.ProgramAssignment).filter(
+        models.ProgramAssignment.patient_id == user.patient_profile.id,
+        models.ProgramAssignment.status == "active"
+    ).first()
+    
+    if not assignment:
+        return {"message": "No active program"}
+        
+    program = assignment.program
+    exercises = json.loads(program.exercises_json)
+    
+    return {
+        "program_title": program.title,
+        "description": program.description,
+        "exercises": exercises,
+        "progress": json.loads(assignment.progress_json)
+    }
+
+# Messaging Endpoints
+@router.post("/messages")
+def send_message(msg: MessageCreate, db: Session = Depends(get_db)):
+    sender = db.query(models.User).filter(models.User.email == msg.sender_email).first()
+    receiver = db.query(models.User).filter(models.User.email == msg.receiver_email).first()
+    
+    if not sender or not receiver:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    new_message = models.Message(
+        sender_id=sender.id,
+        receiver_id=receiver.id,
+        content=msg.content
+    )
+    db.add(new_message)
+    db.commit()
+    return {"message": "Message sent"}
+
+@router.get("/messages/{email}")
+def get_messages(email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Get messages where user is sender or receiver
+    messages = db.query(models.Message).filter(
+        (models.Message.sender_id == user.id) | (models.Message.receiver_id == user.id)
+    ).order_by(models.Message.timestamp).all()
+    
+    return messages

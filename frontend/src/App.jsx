@@ -9,6 +9,9 @@ import SessionView from './pages/SessionView';
 import ExerciseBriefing from './pages/ExerciseBriefing';
 import AuthCallback from './pages/AuthCallback';
 import MarketplacePage from './pages/MarketplacePage';
+import AssessmentIntro from './pages/AssessmentIntro';
+import AssessmentSession from './pages/AssessmentSession';
+import AssessmentResults from './pages/AssessmentResults';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -18,6 +21,9 @@ function App() {
         <div className="app-container">
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/assessment" element={<AssessmentIntro />} />
+            <Route path="/assessment/session/:sessionId" element={<AssessmentSession />} />
+            <Route path="/assessment/results/:sessionId" element={<AssessmentResults />} />
             <Route path="/auth/verify" element={<AuthCallback />} />
 
             <Route path="/patient/*" element={

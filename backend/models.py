@@ -28,9 +28,9 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
     roles = Column(String, default="patient") # comma-separated roles: "patient,professional,trainer"
     full_name = Column(String)
+    profile_image_url = Column(String, nullable=True)
     
     def has_role(self, role: str) -> bool:
         """Check if user has a specific role"""
@@ -57,6 +57,11 @@ class Patient(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     professional_id = Column(Integer, ForeignKey("professionals.id"), nullable=True)
     
+    # JSON fields for detailed profile
+    mobility_traits = Column(Text, nullable=True) # JSON: ["limited_rom_left_arm", "recent_surgery"]
+    recovery_goals = Column(Text, nullable=True) # JSON: ["walk_without_pain", "lift_arm_90_deg"]
+    surgery_info = Column(Text, nullable=True) # JSON: {"date": "2024-01-01", "type": "ACL Reconstruction"}
+
     user = relationship("User", back_populates="patient_profile")
     professional = relationship("Professional", back_populates="patients")
     sessions = relationship("Session", back_populates="patient")
@@ -173,3 +178,55 @@ class UserExercise(Base):
     
     user = relationship("User", back_populates="unlocked_exercises")
     exercise = relationship("Exercise", back_populates="user_exercises")
+
+class AnonymousAssessment(Base):
+    __tablename__ = "anonymous_assessments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    exercises_data = Column(Text) # JSON string of exercises performed and results
+    final_feedback = Column(Text, nullable=True)
+
+class Program(Base):
+    __tablename__ = "programs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(Text)
+    created_by_id = Column(Integer, ForeignKey("professionals.id"))
+    exercises_json = Column(Text) # JSON list of exercise IDs: ["squat", "plank"]
+    
+    created_by = relationship("Professional", back_populates="created_programs")
+    assignments = relationship("ProgramAssignment", back_populates="program")
+
+class ProgramAssignment(Base):
+    __tablename__ = "program_assignments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"))
+    program_id = Column(Integer, ForeignKey("programs.id"))
+    assigned_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(String, default="active") # active, completed, archived
+    progress_json = Column(Text, default="{}") # JSON: {"squat": {"completed": 5, "last_done": "..."}}
+    
+    patient = relationship("Patient", back_populates="program_assignments")
+    program = relationship("Program", back_populates="assignments")
+
+class Message(Base):
+    __tablename__ = "messages"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    receiver_id = Column(Integer, ForeignKey("users.id"))
+    content = Column(Text)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    read = Column(Boolean, default=False)
+    
+    sender = relationship("User", foreign_keys=[sender_id])
+    receiver = relationship("User", foreign_keys=[receiver_id])
+
+# Update relationships
+Professional.created_programs = relationship("Program", back_populates="created_by")
+Patient.program_assignments = relationship("ProgramAssignment", back_populates="patient")

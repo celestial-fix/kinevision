@@ -1,0 +1,78 @@
+# Tasks
+
+- [x] Requirements Gathering <!-- id: 0 -->
+    - [x] Clarify Computer Vision requirements (Client-side primary, server secondary) <!-- id: 1 -->
+    - [x] Define "Live Video Coach" scope (AI-based, real-time feedback) <!-- id: 2 -->
+    - [x] Determine Platform targets (Responsive Web App) <!-- id: 3 -->
+    - [x] Discuss Tech Stack (FastAPI + React/Vite + MediaPipe) <!-- id: 4 -->
+- [x] System Architecture Design <!-- id: 5 -->
+    - [x] Define Data Model (Users, Professionals, AI Trainers, Videos, Sessions, CVMetrics, GamificationStats) <!-- id: 6 -->
+# Tasks
+
+- [x] Requirements Gathering <!-- id: 0 -->
+    - [x] Clarify Computer Vision requirements (Client-side primary, server secondary) <!-- id: 1 -->
+    - [x] Define "Live Video Coach" scope (AI-based, real-time feedback) <!-- id: 2 -->
+    - [x] Determine Platform targets (Responsive Web App) <!-- id: 3 -->
+    - [x] Discuss Tech Stack (FastAPI + React/Vite + MediaPipe) <!-- id: 4 -->
+- [x] System Architecture Design <!-- id: 5 -->
+    - [x] Define Data Model (Users, Professionals, AI Trainers, Videos, Sessions, CVMetrics, GamificationStats) <!-- id: 6 -->
+    - [x] Design API Interface (FastAPI endpoints) <!-- id: 7 -->
+    - [x] Select CV/AI Libraries (MediaPipe for client, PyTorch/OpenCV for server) <!-- id: 8 -->
+    - [x] Design Patient Dashboard (Gamification, Progress Charts) <!-- id: 15 -->
+    - [x] Design AI Trainer Dashboard (Video Upload, Rating, Ranking System) <!-- id: 16 -->
+- [x] Implementation Planning <!-- id: 9 -->
+    - [x] Create implementation_plan.md <!-- id: 10 -->
+- [x] Project Initialization <!-- id: 11 -->
+    - [x] Setup Repository Structure <!-- id: 12 -->
+    - [x] Initialize Frontend (React+Vite) <!-- id: 13 -->
+    - [x] Initialize Backend (FastAPI) <!-- id: 14 -->
+- [/] Core Feature Implementation <!-- id: 17 -->
+    - [ ] Install Routing (react-router-dom) <!-- id: 18 -->
+    - [ ] Create Basic Layout & Theme (Dark Mode, Premium UI) <!-- id: 19 -->
+    - [x] Implement Landing Page (Role Selection) <!-- id: 20 -->
+    - [x] Implement Patient Dashboard Skeleton <!-- id: 21 -->
+    - [x] Implement Professional Dashboard Skeleton <!-- id: 22 -->
+    - [x] Implement AI Trainer Dashboard Skeleton <!-- id: 23 -->
+- [/] Computer Vision Integration <!-- id: 24 -->
+    - [x] Install MediaPipe Dependencies <!-- id: 25 -->
+    - [x] Create PoseTracker Component <!-- id: 26 -->
+    - [x] Implement AICoach Logic <!-- id: 27 -->
+    - [x] Create Session View Page <!-- id: 28 -->
+- [/] Exercise Selection & Briefing <!-- id: 29 -->
+    - [x] Implement Exercise List in Patient Dashboard <!-- id: 30 -->
+    - [x] Create Exercise Briefing View <!-- id: 31 -->
+    - [x] Update SessionView to support Exercise Context <!-- id: 32 -->
+    - [x] Refactor AICoach for multiple exercises <!-- id: 33 -->
+- [ ] Video Upload & Deep Analysis <!-- id: 34 -->
+    - [x] Implement Video Storage Privacy Toggle <!-- id: 39 -->
+    - [x] Add Video Upload UI to SessionView <!-- id: 35 -->
+    - [x] Create Backend Endpoint for Video Upload <!-- id: 36 -->
+    - [x] Implement Server-Side MediaPipe Processing <!-- id: 37 -->
+    - [ ] Create Analysis Report View <!-- id: 38 -->
+- [ ] Enhanced Gamification <!-- id: 40 -->
+    - [x] Redesign Patient Dashboard Stats <!-- id: 41 -->
+    - [x] Add Visual Streak Progress <!-- id: 42 -->
+    - [x] Add Gamification Animations <!-- id: 43 -->
+- [ ] Localization (Spanish) <!-- id: 44 -->
+    - [ ] Translate Landing Page <!-- id: 45 -->
+    - [ ] Translate Patient Dashboard <!-- id: 46 -->
+    - [ ] Translate Session & Briefing Views <!-- id: 47 -->
+    - [ ] Translate AI Coach Feedback & Exercises <!-- id: 48 -->
+- [x] Voice Interaction <!-- id: 49 -->
+    - [x] Implement Speech Recognition in SessionView <!-- id: 50 -->
+    - [x] Update AICoach to process Voice Commands <!-- id: 51 -->
+- [ ] Plan Review Options <!-- id: 52 -->
+    - [ ] Add 'Review with AI' Button to Dashboard <!-- id: 53 -->
+    - [ ] Add 'Request Professional Review' Button to Dashboard <!-- id: 54 -->
+- [x] AI Trainer Enhancements <!-- id: 55 -->
+    - [x] Update Backend Models for Trainer Roles & Stats <!-- id: 56 -->
+    - [x] Create Trainer Leaderboard Component <!-- id: 57 -->
+    - [x] Update Trainer Dashboard with Gamification <!-- id: 58 -->
+- [x] Authentication & Security <!-- id: 59 -->
+    - [x] Implement Magic Link Backend Logic <!-- id: 60 -->
+    - [x] Revamp Landing Page (Content + Login) <!-- id: 61 -->
+    - [x] Protect Routes in Frontend <!-- id: 62 -->
+- [x] UI/UX Overhaul <!-- id: 63 -->
+    - [x] Create Global Layout Component <!-- id: 64 -->
+    - [x] Refactor Dashboards to use Layout <!-- id: 65 -->
+    - [x] Improve Typography and Color Palette <!-- id: 66 -->

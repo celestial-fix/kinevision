@@ -1,0 +1,63 @@
+# Tasks
+
+- [x] Fix ReferenceError in ProfessionalDashboard.jsx <!-- id: 0 -->
+- [x] Fix Layout Clumping Issue <!-- id: 4 -->
+- [x] Fix Landing Page Styles <!-- id: 8 -->
+- [x] Dockerize Application <!-- id: 12 -->
+- [x] Add Postgres and Volumes <!-- id: 17 -->
+- [x] Fix Magic Link Authentication <!-- id: 22 -->
+    - [x] Investigate backend auth API <!-- id: 23 -->
+    - [x] Check email sending implementation <!-- id: 24 -->
+    - [x] Fix or implement email service <!-- id: 25 -->
+    - [x] Test magic link flow <!-- id: 26 -->
+- [ ] Create Admin Portal <!-- id: 27 -->
+    - [ ] Design admin dashboard <!-- id: 28 -->
+    - [ ] Implement admin routes <!-- id: 29 -->
+    - [ ] Add admin authentication <!-- id: 30 -->
+    - [ ] Test admin access <!-- id: 31 -->
+- [x] Add Theme System <!-- id: 32 -->
+    - [x] Create theme context and provider <!-- id: 33 -->
+    - [x] Define dark, light, and high contrast themes <!-- id: 34 -->
+    - [x] Update components to use theme variables <!-- id: 35 -->
+    - [x] Add theme switcher UI <!-- id: 36 -->
+    - [x] Test accessibility compliance <!-- id: 37 -->
+- [x] Fix Landing Page Theme Support <!-- id: 38 -->
+    - [x] Update Landing page to use CSS variables <!-- id: 39 -->
+    - [x] Test theme switching on landing page <!-- id: 40 -->
+- [ ] Add AI Trainer Video Features <!-- id: 41 -->
+    - [ ] Implement skeleton wireframe toggle <!-- id: 42 -->
+    - [ ] Add video playback controls <!-- id: 43 -->
+    - [ ] Test wireframe visualization <!-- id: 44 -->
+- [x] Fix Magic Link SMTP <!-- id: 45 -->
+    - [x] Update endpoint to use request body <!-- id: 46 -->
+    - [x] Test email sending <!-- id: 47 -->
+- [ ] Fix Theme Visual Issues <!-- id: 48 -->
+    - [ ] Fix dark banner in light theme on landing page <!-- id: 49 -->
+    - [ ] Fix white text on white background in patient dashboard <!-- id: 50 -->
+- [ ] Implement AI Trainer Bootcamp System <!-- id: 51 -->
+    - [ ] Design trainer ranking/progression system <!-- id: 52 -->
+    - [ ] Create training dataset library <!-- id: 53 -->
+    - [ ] Implement assessment validation logic <!-- id: 54 -->
+    - [ ] Add bootcamp UI for trainers <!-- id: 55 -->
+    - [ ] Test trainer progression flow <!-- id: 56 -->
+- [ ] Add Professional Content Creation Tools <!-- id: 57 -->
+    - [ ] Design tutorial video upload interface <!-- id: 58 -->
+    - [ ] Add annotation/tips overlay system <!-- id: 59 -->
+    - [ ] Implement exercise metadata editor <!-- id: 60 -->
+    - [ ] Create review/approval workflow <!-- id: 61 -->
+    - [ ] Add content to exercise pool <!-- id: 62 -->
+- [ ] Implement AI Exercise Deduplication System <!-- id: 63 -->
+    - [ ] Build similarity detection for exercises <!-- id: 64 -->
+    - [ ] Create AI consolidation logic <!-- id: 65 -->
+    - [ ] Design merged exercise UI <!-- id: 66 -->
+    - [ ] Add professional attribution system <!-- id: 67 -->
+- [ ] Implement Public Exercise Marketplace <!-- id: 68 -->
+    - [ ] Design marketplace UI for browsing exercises <!-- id: 69 -->
+    - [ ] Add exercise purchase/subscription system <!-- id: 70 -->
+    - [ ] Implement search and filtering <!-- id: 71 -->
+    - [ ] Add ratings and reviews <!-- id: 72 -->
+- [ ] Implement Tailored Professional Care System <!-- id: 73 -->
+    - [ ] Add patient-professional assignment <!-- id: 74 -->
+    - [ ] Create custom exercise program builder <!-- id: 75 -->
+    - [ ] Add progress tracking for assigned patients <!-- id: 76 -->
+    - [ ] Implement professional notes/feedback system <!-- id: 77 -->

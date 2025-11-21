@@ -97,6 +97,21 @@ const Landing = () => {
                         asegurando una recuperación segura y efectiva desde casa.
                     </p>
 
+                    {/* Assessment CTA */}
+                    <div className="mb-12">
+                        <Link
+                            to="/assessment"
+                            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full font-bold text-lg transition-all hover:scale-105 shadow-lg shadow-blue-500/25"
+                        >
+                            <Activity className="w-6 h-6" />
+                            Probar Auto-Evaluación Gratuita
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                        <p className="mt-3 text-sm text-[var(--text-secondary)]">
+                            No requiere registro • Resultados inmediatos
+                        </p>
+                    </div>
+
                     {/* Login / CTA Box */}
                     <div id="login-section" className="max-w-md mx-auto backdrop-blur-xl rounded-2xl p-8 shadow-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
                         {!sent ? (
