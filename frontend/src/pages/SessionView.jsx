@@ -13,6 +13,7 @@ const SessionView = () => {
     const allowStorage = searchParams.get('storage') === 'true';
     const [mode, setMode] = useState('camera'); // 'camera' or 'upload'
     const [uploadedVideo, setUploadedVideo] = useState(null);
+    const [skeletonMode, setSkeletonMode] = useState('overlay'); // 'overlay', 'skeleton-only', 'video-only'
 
     const [feedback, setFeedback] = useState("Prepárate...");
     const [reps, setReps] = useState(0);
@@ -68,6 +69,31 @@ const SessionView = () => {
                             Subir Video
                         </button>
                     </div>
+                    {mode === 'camera' && (
+                        <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                            <button
+                                onClick={() => setSkeletonMode('overlay')}
+                                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${skeletonMode === 'overlay' ? 'bg-purple-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                                title="Video + Skeleton"
+                            >
+                                Overlay
+                            </button>
+                            <button
+                                onClick={() => setSkeletonMode('skeleton-only')}
+                                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${skeletonMode === 'skeleton-only' ? 'bg-purple-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                                title="Solo Skeleton"
+                            >
+                                Skeleton
+                            </button>
+                            <button
+                                onClick={() => setSkeletonMode('video-only')}
+                                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${skeletonMode === 'video-only' ? 'bg-purple-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                                title="Solo Video"
+                            >
+                                Video
+                            </button>
+                        </div>
+                    )}
                     <div className="bg-slate-800 px-4 py-2 rounded-full flex items-center gap-2">
                         <Timer size={18} className="text-sky-400" />
                         <span className="text-white font-mono">00:45</span>
@@ -80,7 +106,7 @@ const SessionView = () => {
                 {/* Video Feed */}
                 <div className="lg:col-span-2 flex flex-col">
                     {mode === 'camera' ? (
-                        <PoseTracker onFeedback={handleFeedback} exerciseId={exercise.id} />
+                        <PoseTracker onFeedback={handleFeedback} exerciseId={exercise.id} skeletonMode={skeletonMode} />
                     ) : (
                         <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex items-center justify-center">
                             {uploadedVideo ? (

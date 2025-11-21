@@ -5,7 +5,7 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { POSE_CONNECTIONS } from '@mediapipe/pose';
 import { AICoach } from '../logic/AICoach';
 
-const PoseTracker = ({ onFeedback, exerciseId }) => {
+const PoseTracker = ({ onFeedback, exerciseId, skeletonMode = 'overlay' }) => {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const coachRef = useRef(null);
@@ -60,11 +60,8 @@ const PoseTracker = ({ onFeedback, exerciseId }) => {
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, width, height);
 
-        // Draw video frame - optional, we can just show the video element below
-        // canvasCtx.drawImage(results.image, 0, 0, width, height); 
-
-        // Draw landmarks
-        if (results.poseLandmarks) {
+        // Draw skeleton landmarks if not in video-only mode
+        if (results.poseLandmarks && skeletonMode !== 'video-only') {
             drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
                 { color: '#0ea5e9', lineWidth: 4 });
             drawLandmarks(canvasCtx, results.poseLandmarks,
@@ -86,17 +83,26 @@ const PoseTracker = ({ onFeedback, exerciseId }) => {
                     Initializing Camera...
                 </div>
             )}
+            {/* Video element - hidden in skeleton-only mode */}
             <video
                 ref={videoRef}
                 className="absolute inset-0 w-full h-full object-cover"
-                style={{ transform: 'scaleX(-1)' }} // Mirror effect
+                style={{
+                    transform: 'scaleX(-1)', // Mirror effect
+                    opacity: skeletonMode === 'skeleton-only' ? 0 : 1
+                }}
             />
+            {/* Canvas for skeleton - hidden in video-only mode */}
             <canvas
                 ref={canvasRef}
                 className="absolute inset-0 w-full h-full"
                 width={1280}
                 height={720}
-                style={{ transform: 'scaleX(-1)' }} // Mirror effect
+                style={{
+                    transform: 'scaleX(-1)', // Mirror effect
+                    opacity: skeletonMode === 'video-only' ? 0 : 1,
+                    backgroundColor: skeletonMode === 'skeleton-only' ? '#0f172a' : 'transparent'
+                }}
             />
         </div>
     );
