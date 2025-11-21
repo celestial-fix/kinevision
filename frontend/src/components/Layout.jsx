@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Activity, LogOut, User, Settings, Menu, X } from 'lucide-react';
 import ThemeSwitcher from './ThemeSwitcher';
+import RoleSwitcher from './RoleSwitcher';
 
 const Layout = ({ children, role, title, sidebarItems }) => {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
@@ -94,6 +95,7 @@ const Layout = ({ children, role, title, sidebarItems }) => {
                         <h1 className="text-xl font-bold text-white">{title}</h1>
                     </div>
                     <div className="flex items-center gap-4">
+                        <RoleSwitcher />
                         <ThemeSwitcher />
                         {/* Header Actions (Notifications, etc.) could go here */}
                         <button className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors">

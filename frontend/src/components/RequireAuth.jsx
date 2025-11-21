@@ -28,13 +28,19 @@ const RequireAuth = ({ children, allowedRoles = [] }) => {
         return <Navigate to="/" state={{ from: location }} replace />;
     }
 
-    if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-        // User is logged in but doesn't have permission
-        // Redirect to their appropriate dashboard
-        if (user.role === 'patient') return <Navigate to="/patient" replace />;
-        if (user.role === 'professional') return <Navigate to="/professional" replace />;
-        if (user.role === 'trainer') return <Navigate to="/trainer" replace />;
-        return <Navigate to="/" replace />;
+    if (allowedRoles.length > 0) {
+        // Support both single role (legacy) and multiple roles (new)
+        const userRoles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
+        const hasAllowedRole = userRoles.some(role => allowedRoles.includes(role));
+
+        if (!hasAllowedRole) {
+            // User doesn't have any of the required roles
+            // Redirect to their first available dashboard
+            if (userRoles.includes('patient')) return <Navigate to="/patient" replace />;
+            if (userRoles.includes('professional')) return <Navigate to="/professional" replace />;
+            if (userRoles.includes('trainer')) return <Navigate to="/trainer" replace />;
+            return <Navigate to="/" replace />;
+        }
     }
 
     return children;
