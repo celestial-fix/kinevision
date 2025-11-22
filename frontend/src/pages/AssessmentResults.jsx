@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { CheckCircle2, Award, ArrowRight, Activity } from 'lucide-react';
 import AssessmentLayout from '../components/AssessmentLayout';
 
+import config from '../config';
+
 const AssessmentResults = () => {
     const { sessionId } = useParams();
     const [results, setResults] = useState(null);
@@ -11,7 +13,7 @@ const AssessmentResults = () => {
     useEffect(() => {
         const fetchResults = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/api/assessment/${sessionId}/results`);
+                const response = await fetch(`${config.API_URL}/api/assessment/${sessionId}/results`);
                 const data = await response.json();
                 setResults(data);
             } catch (error) {

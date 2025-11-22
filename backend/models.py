@@ -8,6 +8,10 @@ import os
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./kinevision_v2.db")
 
+# Fix for Vercel/Heroku Postgres using postgres:// which SQLAlchemy doesn't support
+if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
 )

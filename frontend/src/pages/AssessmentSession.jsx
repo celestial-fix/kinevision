@@ -21,6 +21,8 @@ const EXERCISES = [
     }
 ];
 
+import config from '../config';
+
 const AssessmentSession = () => {
     const { sessionId } = useParams();
     const navigate = useNavigate();
@@ -233,7 +235,7 @@ const AssessmentSession = () => {
         formData.append('file', fileBlob, filename);
 
         try {
-            const response = await fetch(`http://localhost:8000/api/assessment/${sessionId}/submit?exercise_id=${currentExercise.id}`, {
+            const response = await fetch(`${config.API_URL}/api/assessment/${sessionId}/submit?exercise_id=${currentExercise.id}`, {
                 method: 'POST',
                 body: formData,
             });

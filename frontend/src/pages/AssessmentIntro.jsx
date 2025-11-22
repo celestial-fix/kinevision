@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, ShieldCheck, Timer, Video, Calendar } from 'lucide-react';
 import AssessmentLayout from '../components/AssessmentLayout';
 
+import config from '../config';
+
 const AssessmentIntro = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -10,7 +12,7 @@ const AssessmentIntro = () => {
     const startAssessment = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/assessment/start', {
+            const response = await fetch(`${config.API_URL}/api/assessment/start`, {
                 method: 'POST',
             });
             const data = await response.json();
