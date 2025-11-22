@@ -133,6 +133,8 @@ class Session(Base):
     start_time = Column(DateTime, default=datetime.utcnow)
     end_time = Column(DateTime, nullable=True)
     summary = Column(Text, nullable=True)
+    pre_session_feeling = Column(Text, nullable=True)
+    pre_session_audio_url = Column(String, nullable=True)
     
     patient = relationship("Patient", back_populates="sessions")
     metrics = relationship("CVMetric", back_populates="session")

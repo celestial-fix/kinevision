@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from models import engine, SessionLocal
 from pydantic import BaseModel
@@ -194,8 +194,46 @@ def login():
 
 # Placeholder for Session endpoints
 @router.post("/sessions/start")
-def start_session():
-    return {"message": "Session started"}
+async def start_session(
+    patient_email: str = Form(...),
+    exercise_id: str = Form(...),
+    feeling_text: str = Form(None),
+    audio_file: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
+    # 1. Get Patient
+    user = db.query(models.User).filter(models.User.email == patient_email).first()
+    if not user or not user.patient_profile:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # 2. Handle Audio File
+    audio_url = None
+    if audio_file:
+        upload_dir = "uploads/feelings"
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
+        
+        # Create unique filename
+        filename = f"{uuid.uuid4()}_{audio_file.filename}"
+        file_path = os.path.join(upload_dir, filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(audio_file.file, buffer)
+            
+        audio_url = f"/uploads/feelings/{filename}" # In real app, upload to S3/Cloudinary
+        
+    # 3. Create Session
+    new_session = models.Session(
+        patient_id=user.patient_profile.id,
+        start_time=datetime.utcnow(),
+        pre_session_feeling=feeling_text,
+        pre_session_audio_url=audio_url
+    )
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+    
+    return {"session_id": new_session.id, "message": "Session started successfully"}
 
 @router.post("/sessions/end")
 def end_session():
