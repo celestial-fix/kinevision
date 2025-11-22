@@ -1,27 +1,35 @@
 services:
-  backend:
+  kv-backend:
     build: ./backend
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://kinevision:securepassword@postgres:5432/kinevision_db
-    env_file:
-      - ./backend/.env
+      - DATABASE_URL=postgresql://kinevision:securepassword@kv-postgres:5432/kinevision_db
+      - SECRET_KEY=your-secret-key
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - SMTP_HOST=smtp.example.com
+      - SMTP_PORT=587
+      - SMTP_USERNAME=your-username
+      - SMTP_PASSWORD=your-password
+      - SMTP_FROM_NAME=KineVision
     volumes:
       - video_storage:/app/videos
     depends_on:
-      - postgres
-    restart: always
+      - kv-postgres
+    restart: unless-stopped
 
-  frontend:
+  kv-frontend:
     build: ./frontend
-    ports:
-      - "80:80"
     depends_on:
-      - backend
-    restart: always
+      - kv-backend
+    ports:
+      - "5173:80"
+    networks:
+      - kinevision_network
+    restart: unless-stopped
 
-  postgres:
+  kv-postgres:
     image: postgres:15-alpine
     environment:
       - POSTGRES_USER=kinevision
@@ -29,8 +37,11 @@ services:
       - POSTGRES_DB=kinevision_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: always
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   video_storage:
+
+networks:
+  kinevision_network:
