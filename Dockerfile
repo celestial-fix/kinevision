@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y nginx && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
-RUN uv sync --frozen --no-cache --system
+RUN uv sync --frozen --no-cache
 
 COPY backend/ .
 
