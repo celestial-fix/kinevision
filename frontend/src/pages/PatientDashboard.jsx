@@ -4,6 +4,7 @@ import { Activity, Calendar, Trophy, Video, Flame, TrendingUp, BrainCircuit, Ste
 import { EXERCISES } from '../data/exercises';
 import Layout from '../components/Layout';
 import MessagingComponent from '../components/MessagingComponent';
+import config from '../config';
 
 const PatientDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -19,7 +20,7 @@ const PatientDashboard = () => {
         const fetchData = async () => {
             try {
                 // Fetch Program
-                const progRes = await fetch(`http://localhost:8000/api/patient/program?email=${userEmail}`);
+                const progRes = await fetch(`${config.API_URL}/api/patient/program?email=${userEmail}`);
                 if (progRes.ok) {
                     const progData = await progRes.json();
                     setProgram(progData);

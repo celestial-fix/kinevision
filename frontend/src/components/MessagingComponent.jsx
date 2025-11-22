@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, User } from 'lucide-react';
+import config from '../config';
 
 const MessagingComponent = ({ currentUserEmail, otherUserEmail, otherUserName }) => {
     const [messages, setMessages] = useState([]);
@@ -9,7 +10,7 @@ const MessagingComponent = ({ currentUserEmail, otherUserEmail, otherUserName })
 
     const fetchMessages = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/api/messages/${currentUserEmail}`);
+            const response = await fetch(`${config.API_URL}/api/messages/${currentUserEmail}`);
             if (response.ok) {
                 const data = await response.json();
                 // Filter messages between these two users
@@ -41,7 +42,7 @@ const MessagingComponent = ({ currentUserEmail, otherUserEmail, otherUserName })
         if (!newMessage.trim()) return;
 
         try {
-            const response = await fetch('http://localhost:8000/api/messages', {
+            const response = await fetch(`${config.API_URL}/api/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

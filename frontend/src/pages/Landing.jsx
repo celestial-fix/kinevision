@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Activity, User, Stethoscope, BrainCircuit, Check, ArrowRight, Mail, Loader2 } from 'lucide-react';
 import ThemeSwitcher from '../components/ThemeSwitcher';
+import config from '../config';
 
 const Landing = () => {
     const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ const Landing = () => {
         setLoading(true);
         // API call to backend
         try {
-            const response = await fetch('http://localhost:8000/api/auth/magic-link/request', {
+            const response = await fetch(`${config.API_URL}/api/auth/magic-link/request`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
